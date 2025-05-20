@@ -6,7 +6,6 @@
 #include <math.h>
 #include <iostream>
 
-
 extern GLfloat t;
 
 extern GLuint program;
@@ -15,16 +14,22 @@ extern vec3 *vertexArray;
 extern Model *tm;
 extern GLuint tex1, tex2, stex;
 extern TextureData ttex;
-extern double movementSpeed ;
+extern double movementSpeed;
 extern vec3 cameraDirection;
 extern vec3 normalCameraDirection;
 extern vec3 cameraPosition;
 
 extern vec2 direction;
 
-
+extern float throttle;
+extern float throttleFactor;
+extern float speed;
+extern float airDragFactor;
+extern float verticalDragFactor;
+extern int roll;
+extern int pitch;
 
 Model *GenerateTerrain(TextureData *tex);
 void keyboardPress();
-void mouseMoved(int x, int y);
-
+mat4 rotationMatrix(vec3 axis, float angle);
+// void mouseMoved(int x, int y);

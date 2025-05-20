@@ -8,15 +8,21 @@ vec3 *vertexArray;
 Model *tm;
 GLuint tex1, tex2, stex;
 TextureData ttex;
-double movementSpeed = 0.5;
+// double movementSpeed = 0.5;
 vec3 cameraDirection;
-vec3 normalCameraDirection(0.0f, 0.0f, -1.0f);
+vec3 normalCameraDirection(0.683106f, 0.321681f, 0.655658f);
 vec3 cameraPosition(50.0f, 20.f, -100.0f);
+// vec3 cameraRotation(0.0f, 1.0f, 0.0f);
 
 vec2 direction(0.0f, 0.0f);
-
-
-
+// physics
+float throttle = 0.05; // 0 to 1
+float throttleFactor = 0.5;
+float speed = 0.05; // 0 to 1
+float airDragFactor = 0.2;
+float verticalDragFactor = 0.2;
+int roll = 0;  // -45 to + 45 degrees
+int pitch = 0; // -45 to + 45 degrees
 
 Model *GenerateTerrain(TextureData *tex)
 {
@@ -57,7 +63,6 @@ Model *GenerateTerrain(TextureData *tex)
 			indexArray[(x + z * (tex->width - 1)) * 6 + 3] = x + 1 + z * tex->width;
 			indexArray[(x + z * (tex->width - 1)) * 6 + 4] = x + (z + 1) * tex->width;
 			indexArray[(x + z * (tex->width - 1)) * 6 + 5] = x + 1 + (z + 1) * tex->width;
-
 		}
 
 	for (x = 1; x < tex->width - 1; x++)
@@ -76,8 +81,6 @@ Model *GenerateTerrain(TextureData *tex)
 			vec3 genNormal{normalize(cross(v1, v2))}; // rimligt
 			genNormal.y = abs(genNormal.y);
 			normalArray[(x + z * tex->width)] = genNormal;
-
-		
 		}
 	}
 
@@ -99,31 +102,59 @@ Model *GenerateTerrain(TextureData *tex)
 
 void keyboardPress()
 {
+	/*
+	if (glutKeyIsDown('d'))
+		cameraPosition += movementSpeed * normalize(cross(normalCameraDirection, vec3(0.0f, 0.1f, 0.0f)));
+	else if (glutKeyIsDown('a'))
+		cameraPosition -= movementSpeed * normalize(cross(normalCameraDirection, vec3(0.0f, 0.1f, 0.0f)));
+	else if (glutKeyIsDown('w'))
+		cameraPosition += movementSpeed * normalCameraDirection;
+	else if (glutKeyIsDown('s'))
+		cameraPosition -= movementSpeed * normalCameraDirection;
+	*/
 
-    if (glutKeyIsDown('d'))
-        cameraPosition += movementSpeed * normalize(cross(normalCameraDirection, vec3(0.0f, 0.1f, 0.0f)));
-    else if (glutKeyIsDown('a'))
-        cameraPosition -= movementSpeed * normalize(cross(normalCameraDirection, vec3(0.0f, 0.1f, 0.0f)));
-    else if (glutKeyIsDown('w'))
-        cameraPosition += movementSpeed * normalCameraDirection;
-    else if (glutKeyIsDown('s'))
-        cameraPosition -= movementSpeed * normalCameraDirection;
+	if (glutKeyIsDown('d') && roll < 45)
+		roll += 1;
+	else if (glutKeyIsDown('a') && roll > -45)
+		roll -= 1;
+	else if (glutKeyIsDown('w') && pitch < 45)
+		pitch += 1;
+	else if (glutKeyIsDown('s') && pitch > -45)
+		pitch -= 1;
+
+	if (glutKeyIsDown('r') && throttle < 1.0)
+		throttle += 0.05;
+	else if (glutKeyIsDown('f') && throttle > 0.0)
+		throttle -= 0.05;
 }
 
-
-
-
-void mouseMoved(int x, int y)
+mat4 rotationMatrix(vec3 axis, float angle)
 {
-    float change_x = (x - 300) * 0.000025f;
-    float change_y = (300 - y) * 0.000025f;
-    direction.x += change_x;
-    direction.y += change_y;
-    cameraDirection.x = cos((180.0 / M_PI) * direction.x);
-    cameraDirection.y = sin((180.0 / M_PI) * direction.y);
-    cameraDirection.z = sin((180.0 / M_PI) * direction.x);
-    normalCameraDirection = normalize(cameraDirection);
-    // std::cout << normalCameraDirection.x << " " << normalCameraDirection.y << " " << normalCameraDirection.z << std::endl;
-    // printf("%d %d\n", x, y);
-    glutWarpPointer(300, 300);
+	float c = cos(angle);
+	float s = sin(angle);
+	float t = 1.0 - c;
+
+	axis = normalize(axis);
+	float x = axis.x, y = axis.y, z = axis.z;
+
+	return mat4(
+		t * x * x + c, t * x * y - s * z, t * x * z + s * y, 0,
+		t * x * y + s * z, t * y * y + c, t * y * z - s * x, 0,
+		t * x * z - s * y, t * y * z + s * x, t * z * z + c, 0,
+		0, 0, 0, 1);
 }
+
+/*void mouseMoved(int x, int y)
+{
+	float change_x = (x - 300) * 0.000025f;
+	float change_y = (300 - y) * 0.000025f;
+	direction.x += change_x;
+	direction.y += change_y;
+	cameraDirection.x = cos((180.0 / M_PI) * direction.x);
+	cameraDirection.y = sin((180.0 / M_PI) * direction.y);
+	cameraDirection.z = sin((180.0 / M_PI) * direction.x);
+	normalCameraDirection = normalize(cameraDirection);
+	// std::cout << normalCameraDirection.x << " " << normalCameraDirection.y << " " << normalCameraDirection.z << std::endl;
+	// printf("%d %d\n", x, y);
+	glutWarpPointer(300, 300);
+}*/
