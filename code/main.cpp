@@ -16,7 +16,7 @@ void printDebugInfo()
     std::cout << "Throttle: " << throttle * 100 << "%" << std::endl;
     std::cout << "Altitude: " << cameraPosition.y << std::endl;
     std::cout << "Roll: " << roll << " degrees" << std::endl;
-    std::cout << "Pitch: " << -1 * pitch << " degrees" << std::endl;
+    std::cout << "Pitch: " << pitch << " degrees" << std::endl;
     std::cout << "\033[2J"; // clear screen
 }
 

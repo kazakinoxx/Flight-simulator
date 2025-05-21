@@ -25,8 +25,8 @@ float throttleFactor = 1.0;
 float dV = 0.0;
 float speed = 0.05; // 0 to 1
 float sidewaysSpeed = 0;
-float airDragFactor = 0.1;
-float verticalDragFactor = 0.25;
+float airDragFactor = 0.25;
+float verticalDragFactor = 0.55;
 int lastRoll = 0;
 int lastPitch = 0;
 int roll = 0;
@@ -210,7 +210,7 @@ void keyboardPress()
 
 	if (glutKeyIsDown('r') && throttle + 0.05 <= 1.01)
 		throttle += 0.05;
-	else if (glutKeyIsDown('f') && throttle - 0.05 >= 0.0)
+	else if (glutKeyIsDown('f') && throttle - 0.05 >= -0.01)
 		throttle -= 0.05;
 }
 
@@ -244,7 +244,7 @@ void updatePhysics()
 	// Get camera target and view WTW matrix
 	cameraTarget = cameraPosition + forward;
 
-	dV = throttle * throttleFactor - sin((pitch * M_PI / 180.0) - M_PI) / 2;
+	dV = throttle * throttleFactor + verticalDragFactor * (sin((pitch * M_PI / 180.0) - M_PI) / 2);
 	if ((abs(speed + dV) - speed * airDragFactor) < 0)
 		speed = 0;
 	else if (dV >= 0)
