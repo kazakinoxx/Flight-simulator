@@ -3,7 +3,7 @@
 GLfloat t;
 
 GLuint program;
-mat4 projectionMatrix = frustum(-0.1, 0.1, -0.1, 0.1, 0.2, 2000.0);
+mat4 projectionMatrix = frustum(-0.1, 0.1, -0.1, 0.1, 0.2, 5000.0);
 vec3 *vertexArray;
 Model *tm;
 GLuint tex1, tex2, stex;
@@ -197,8 +197,8 @@ void keyboardPress()
 	lastPitch = pitch;
 	lastRoll = roll;
 
-	if (glutKeyIsDown('r') && throttle < 1.0)
-		throttle += 0.05;
+	if (glutKeyIsDown('r'))
+		throttle += 1;
 	else if (glutKeyIsDown('f') && throttle > 0.0)
 		throttle -= 0.05;
 }

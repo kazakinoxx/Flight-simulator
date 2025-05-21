@@ -33,11 +33,7 @@ void init(void)
     LoadTGATextureSimple("../resources/cliff_pink_20.tga", &tex1);
     glUniform1i(glGetUniformLocation(program, "tex"), 0);
 
-    glActiveTexture(GL_TEXTURE1);
-    glGenTextures(1, &stex);
-    glBindTexture(GL_TEXTURE_2D, stex);
-    LoadTGATextureSimple("../resources/groundsm_wht02.tga", &stex);
-    glUniform1i(glGetUniformLocation(program, "snowTex"), 1);
+   
 
     glActiveTexture(GL_TEXTURE2);
     glGenTextures(1, &tex2);
@@ -47,6 +43,37 @@ void init(void)
     glUniform1i(glGetUniformLocation(program, "gtex"), 2);
 
 
+    glActiveTexture(GL_TEXTURE1);
+    glGenTextures(1, &stex);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, stex);
+   
+    glUniform1i(glGetUniformLocation(program, "snowTex"), 1);
+    GLint width = 512;
+    GLint height = 512;
+    int numLayer = 7;
+
+    // Allocate storage
+    glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGBA8, width, height, numLayer);
+
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    for (int i = 0; i < numLayer; i++)
+    {
+        char filename[64];
+        sprintf(filename, "../resources/groundsm_wht0%i.tga", i + 1);
+
+        LoadTGATexture(filename, &textures[i]);
+        glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, width, height, 1,
+                        GL_RGB, GL_UNSIGNED_BYTE, textures[i].imageData);
+
+        free(textures[i].imageData);
+    }
+    glUniform1i(glGetUniformLocation(program, "tex"), 1);
+
+ 
     glUniformMatrix4fv(glGetUniformLocation(program, "projMatrix"), 1, GL_TRUE, projectionMatrix.m);
 
 

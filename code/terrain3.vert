@@ -10,17 +10,16 @@ out vec2 texCoord;
 in vec3 inHeight;
 out float outHeight;
 
-// NY
 uniform mat4 projMatrix;
 uniform mat4 mdlMatrix;
 uniform mat4 trans;
 
 
 
-void main(void)
-{
+void main(void){
+	
 	texCoord = inTexCoord;
 	outNormal = inNormal;
 	outHeight = inHeight.y;
-	gl_Position = projMatrix * mdlMatrix * trans * vec4(inPosition, 1.0);
+	gl_Position = projMatrix * mdlMatrix * trans * vec4(inPosition , 1.0);
 }
