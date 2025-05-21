@@ -1,0 +1,51 @@
+# Full skybox
+
+# Built manually by Ingemar
+# This version has tweaked number to get inside the borders
+# and avoid interpolation with the empty areas
+
+mtllib cube.mtl
+o cube1
+#8 vertices, 5 faces
+v -2.0 -2.0 2.0
+v -2.0 2.0 2.0
+v 2.0 2.0 2.0
+v 2.0 -2.0 2.0
+v -2.0 -2.0 -2.0
+v -2.0 2.0 -2.0
+v 2.0 2.0 -2.0
+v 2.0 -2.0 -2.0
+
+vt 0.252 1.0
+vt 0.498 1.0
+
+vt 0.0 0.665
+vt 0.252 0.665
+vt 0.498 0.665
+vt 0.75 0.665
+vt 1.0 0.665
+
+vt 0.0 0.34
+vt 0.252 0.34
+vt 0.498 0.34
+vt 0.75 0.34
+vt 1.0 0.34
+
+vt 0.252 0.0
+vt 0.498 0.0
+
+g cube1_default
+usemtl default
+# top
+f 2/4 6/1 7/2 3/5
+# front
+f 1/9 2/4 3/5 4/10
+# right
+f 3/5 7/6 8/11 4/10
+# back
+f 8/11 7/6 6/7 5/12
+# left
+f 5/8 6/3 2/4 1/9
+# bottom
+f 1/9 4/10 8/14 5/13
+

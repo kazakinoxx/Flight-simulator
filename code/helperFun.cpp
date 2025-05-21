@@ -3,7 +3,7 @@
 GLfloat t;
 
 GLuint program;
-mat4 projectionMatrix = frustum(-0.1, 0.1, -0.1, 0.1, 0.2, 2000.0);
+mat4 projectionMatrix = frustum(-0.1, 0.1, -0.1, 0.1, 0.2, 5000.0);
 vec3 *vertexArray;
 Model *tm;
 GLuint tex1, tex2, stex;
@@ -113,17 +113,17 @@ void keyboardPress()
 		cameraPosition -= movementSpeed * normalCameraDirection;
 	*/
 
-	if (glutKeyIsDown('d') && roll < 45)
+	if (glutKeyIsDown('d'))
 		roll += 1;
-	else if (glutKeyIsDown('a') && roll > -45)
+	else if (glutKeyIsDown('a') )
 		roll -= 1;
-	else if (glutKeyIsDown('w') && pitch < 45)
+	else if (glutKeyIsDown('s'))
 		pitch += 1;
-	else if (glutKeyIsDown('s') && pitch > -45)
+	else if (glutKeyIsDown('w') )
 		pitch -= 1;
 
-	if (glutKeyIsDown('r') && throttle < 1.0)
-		throttle += 0.05;
+	if (glutKeyIsDown('r') )
+		throttle += 1;
 	else if (glutKeyIsDown('f') && throttle > 0.0)
 		throttle -= 0.05;
 }
