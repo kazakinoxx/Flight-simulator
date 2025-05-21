@@ -10,29 +10,6 @@ struct InstanceData
     float layer;
 };
 
-void updatePhysics()
-{
-
-    vec3 cameraUp = Rz((roll * M_PI) / 180) * vec3(0, 1, 0);
-
-    vec3 right = normalize(cross(cameraUp, normalCameraDirection));
-    mat3 pitchRotation = rotationMatrix(right, pitch * M_PI / 180.0);
-    vec3 pitchedForward = pitchRotation * normalCameraDirection;
-    vec3 cameraTarget = cameraPosition + pitchedForward;
-
-    float dV = throttle * throttleFactor - sin((pitch * M_PI / 180.0) - M_PI) / 2;
-    if ((abs(speed + dV) - speed * airDragFactor) < 0)
-        speed = 0;
-    else if (dV >= 0)
-        dV -= speed * airDragFactor;
-    else if (dV < 0)
-        dV += speed * airDragFactor;
-    speed += dV * 0.001;
-
-    cameraPosition += speed * normalize(cameraTarget - cameraPosition) +
-                      speed * (roll / 45) * normalize(cross(cameraTarget - cameraPosition, vec3(0.0f, 0.1f, 0.0f)));
-}
-
 void printDebugInfo()
 {
     std::cout << "Speed: " << speed << std::endl;
@@ -42,6 +19,7 @@ void printDebugInfo()
     std::cout << "Pitch: " << -1 * pitch << " degrees" << std::endl;
     std::cout << "\033[2J"; // clear screen
 }
+
 std::vector<InstanceData> instances;
 
 unsigned int vertexBufferObjID;
@@ -274,34 +252,8 @@ void display(void)
     // ------ MAIN RENDER PASS ------
     glUseProgram(program);
 
-    // Convert input angles to radians
-    float pitchRad = deltaPitch * M_PI / 180.0f;
-    float rollRad = deltaRoll * M_PI / 180.0f;
-    deltaPitch = 0;
-    deltaRoll = 0;
-
-    // Get current local axes from orientation matrix
-    vec3 forward = normalize(vec3(orientation * vec4(0, 0, -1, 0)));
-    vec3 right = normalize(vec3(orientation * vec4(1, 0, 0, 0)));
-
-    // Apply pitch: rotate around current local right
-    mat4 pitchMatrix = rotationMatrix(right, pitchRad);
-    orientation = pitchMatrix * orientation;
-
-    // Recompute forward after pitch
-    forward = normalize(vec3(orientation * vec4(0, 0, -1, 0)));
-
-    // Apply roll: rotate around updated forward axis
-    mat4 rollMatrix = rotationMatrix(forward, rollRad);
-    orientation = rollMatrix * orientation;
-
-    // Get final camera basis
-    forward = normalize(vec3(orientation * vec4(0, 0, -1, 0)));
-    vec3 up = normalize(vec3(orientation * vec4(0, 1, 0, 0)));
-
-    // Get camera target and view WTW matrix
-    vec3 cameraTarget = cameraPosition + forward;
-
+    keyboardPress();
+    updatePhysics();
     mat4 worldToView = lookAt(cameraPosition, cameraTarget, up);
 
     mat4 modelToWorld = IdentityMatrix();
@@ -359,23 +311,6 @@ void display(void)
     // Reset state
     glEnable(GL_DEPTH_TEST);
     glUseProgram(program);
-
-    // Update physics and input
-    keyboardPress();
-    // updatePhysics();
-
-    float dV = throttle * throttleFactor - sin((pitch * M_PI / 180.0) - M_PI) / 2;
-    if ((abs(speed + dV) - speed * airDragFactor) < 0)
-        speed = 0;
-    else if (dV >= 0)
-        dV -= speed * airDragFactor;
-    else if (dV < 0)
-        dV += speed * airDragFactor;
-    speed = speed + dV * 0.001 > 1 ? 1 : speed + dV * 0.001;
-    sidewaysSpeed = (abs(roll) > 15 && abs(roll) < 165) ? ((upsideDownPitch || upsideDownRoll) ? (roll < 0.0 ? 180.0 + roll : 180.0 - roll) : roll) : 0;
-
-    cameraPosition += speed * normalize(cameraTarget - cameraPosition) + (sidewaysSpeed / 360.0) * normalize(cross(cameraTarget - cameraPosition, vec3(0.0f, 0.1f, 0.0f)));
-
     glutSwapBuffers();
     glutSwapBuffers();
     printDebugInfo();

@@ -12,23 +12,47 @@ vec3 cameraDirection;
 vec3 normalCameraDirection(0.683106f, 0.321681f, 0.655658f);
 vec3 cameraPosition(50.0f, 20.f, -100.0f);
 mat4 orientation = mat4(1.0f);
-
+vec3 forward;
+vec3 right;
+vec3 up;
+mat4 pitchMatrix;
+mat4 rollMatrix;
+vec3 cameraTarget;
 vec2 direction(0.0f, 0.0f);
-// physics
+
 float throttle = 0.05; // 0 to 1
-float throttleFactor = 0.75;
+float throttleFactor = 1.0;
+float dV = 0.0;
 float speed = 0.05; // 0 to 1
 float sidewaysSpeed = 0;
-float airDragFactor = 0.35;
+float airDragFactor = 0.1;
 float verticalDragFactor = 0.25;
 int lastRoll = 0;
 int lastPitch = 0;
 int roll = 0;
 int pitch = 0;
+float rollRad = 0.0;
+float pitchRad = 0.0;
 int deltaRoll = 0;
 int deltaPitch = 0;
 bool upsideDownRoll = false;
 bool upsideDownPitch = false;
+
+mat4 rotationMatrix(vec3 axis, float angle)
+{
+	float c = cos(angle);
+	float s = sin(angle);
+	float t = 1.0 - c;
+
+	axis = normalize(axis);
+	float x = axis.x, y = axis.y, z = axis.z;
+
+	return mat4(
+		t * x * x + c, t * x * y - s * z, t * x * z + s * y, 0,
+		t * x * y + s * z, t * y * y + c, t * y * z - s * x, 0,
+		t * x * z - s * y, t * y * z + s * x, t * z * z + c, 0,
+		0, 0, 0, 1);
+}
 
 Model *GenerateTerrain(TextureData *tex)
 {
@@ -190,18 +214,45 @@ void keyboardPress()
 		throttle -= 0.05;
 }
 
-mat4 rotationMatrix(vec3 axis, float angle)
+void updatePhysics()
 {
-	float c = cos(angle);
-	float s = sin(angle);
-	float t = 1.0 - c;
+	// Convert input angles to radians
+	pitchRad = deltaPitch * M_PI / 180.0f;
+	rollRad = deltaRoll * M_PI / 180.0f;
+	deltaPitch = 0;
+	deltaRoll = 0;
 
-	axis = normalize(axis);
-	float x = axis.x, y = axis.y, z = axis.z;
+	// Get current local axes from orientation matrix
+	forward = normalize(vec3(orientation * vec4(0, 0, -1, 0)));
+	right = normalize(vec3(orientation * vec4(1, 0, 0, 0)));
 
-	return mat4(
-		t * x * x + c, t * x * y - s * z, t * x * z + s * y, 0,
-		t * x * y + s * z, t * y * y + c, t * y * z - s * x, 0,
-		t * x * z - s * y, t * y * z + s * x, t * z * z + c, 0,
-		0, 0, 0, 1);
+	// Apply pitch: rotate around current local right
+	pitchMatrix = rotationMatrix(right, pitchRad);
+	orientation = pitchMatrix * orientation;
+
+	// Recompute forward after pitch
+	forward = normalize(vec3(orientation * vec4(0, 0, -1, 0)));
+
+	// Apply roll: rotate around updated forward axis
+	rollMatrix = rotationMatrix(forward, rollRad);
+	orientation = rollMatrix * orientation;
+
+	// Get final camera basis
+	forward = normalize(vec3(orientation * vec4(0, 0, -1, 0)));
+	up = normalize(vec3(orientation * vec4(0, 1, 0, 0)));
+
+	// Get camera target and view WTW matrix
+	cameraTarget = cameraPosition + forward;
+
+	dV = throttle * throttleFactor - sin((pitch * M_PI / 180.0) - M_PI) / 2;
+	if ((abs(speed + dV) - speed * airDragFactor) < 0)
+		speed = 0;
+	else if (dV >= 0)
+		dV -= speed * airDragFactor;
+	else if (dV < 0)
+		dV += speed * airDragFactor;
+	speed = speed + dV * 0.001 > 1 ? 1 : speed + dV * 0.005;
+	sidewaysSpeed = (abs(roll) > 15 && abs(roll) < 165) ? ((upsideDownPitch || upsideDownRoll) ? (roll < 0.0 ? 180.0 + roll : 180.0 - roll) : roll) : 0;
+
+	cameraPosition += speed * normalize(cameraTarget - cameraPosition) + (sidewaysSpeed / 360.0) * normalize(cross(cameraTarget - cameraPosition, vec3(0.0f, 0.1f, 0.0f)));
 }

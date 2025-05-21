@@ -19,7 +19,8 @@ extern vec3 cameraDirection;
 extern vec3 normalCameraDirection;
 extern vec3 cameraPosition;
 extern mat4 orientation;
-
+extern vec3 up;
+extern vec3 cameraTarget;
 extern vec2 direction;
 
 extern float throttle;
@@ -38,4 +39,4 @@ extern bool upsideDownPitch;
 Model *GenerateTerrain(TextureData *tex);
 void keyboardPress();
 mat4 rotationMatrix(vec3 axis, float angle);
-// void mouseMoved(int x, int y);
+void updatePhysics();
