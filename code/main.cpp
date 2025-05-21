@@ -7,7 +7,7 @@
 struct InstanceData
 {
     vec3 position;
-    float layer; // Changed from int to float for compatibility
+    float layer;
 };
 
 void updatePhysics()
@@ -35,12 +35,12 @@ void updatePhysics()
 
 void printDebugInfo()
 {
-    std::cout << "\033[2J"; // clear screen
     std::cout << "Speed: " << speed << std::endl;
     std::cout << "Throttle: " << throttle * 100 << "%" << std::endl;
     std::cout << "Altitude: " << cameraPosition.y << std::endl;
     std::cout << "Roll: " << roll << " degrees" << std::endl;
     std::cout << "Pitch: " << -1 * pitch << " degrees" << std::endl;
+    std::cout << "\033[2J"; // clear screen
 }
 std::vector<InstanceData> instances;
 
@@ -79,7 +79,6 @@ void init(void)
     glutRepeatingTimer(16.67);
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
-    // glutPassiveMotionFunc(mouseMoved);
     glutHideCursor();
     printError("GL inits");
 
@@ -275,19 +274,6 @@ void display(void)
     // ------ MAIN RENDER PASS ------
     glUseProgram(program);
 
-    /*
-    vec3 cameraUp = Rz((roll * M_PI) / 180) * vec3(0, 1, 0);
-    vec3 right = normalize(cross(cameraUp, normalCameraDirection));
-    mat3 pitchRotation = rotationMatrix(right, pitch * M_PI / 180.0);
-    vec3 pitchedForward = pitchRotation * normalCameraDirection;
-    vec3 cameraRight = normalize(cross(pitchedForward, right));
-    vec3 cameraTarget = cameraPosition + pitchedForward;
-
-    mat4 worldToView = lookAt(cameraPosition.x, cameraPosition.y, cameraPosition.z,
-                              cameraTarget.x, cameraTarget.y, cameraTarget.z,
-                              cameraUp.x, cameraUp.y, cameraUp.z);
-                              */
-
     // Convert input angles to radians
     float pitchRad = deltaPitch * M_PI / 180.0f;
     float rollRad = deltaRoll * M_PI / 180.0f;
@@ -309,11 +295,11 @@ void display(void)
     mat4 rollMatrix = rotationMatrix(forward, rollRad);
     orientation = rollMatrix * orientation;
 
-    // Now get final camera basis
+    // Get final camera basis
     forward = normalize(vec3(orientation * vec4(0, 0, -1, 0)));
     vec3 up = normalize(vec3(orientation * vec4(0, 1, 0, 0)));
 
-    // Compute camera target and view matrix
+    // Get camera target and view WTW matrix
     vec3 cameraTarget = cameraPosition + forward;
 
     mat4 worldToView = lookAt(cameraPosition, cameraTarget, up);
@@ -378,9 +364,6 @@ void display(void)
     keyboardPress();
     // updatePhysics();
 
-    /*if (((speed + (throttle - 0.5) / 10) < 1) && ((speed + (throttle - 0.5) / 10) > 0))
-        speed += ((throttle - 0.5) / 10);*/
-
     float dV = throttle * throttleFactor - sin((pitch * M_PI / 180.0) - M_PI) / 2;
     if ((abs(speed + dV) - speed * airDragFactor) < 0)
         speed = 0;
@@ -388,26 +371,12 @@ void display(void)
         dV -= speed * airDragFactor;
     else if (dV < 0)
         dV += speed * airDragFactor;
-    speed += dV * 0.001;
+    speed = speed + dV * 0.001 > 1 ? 1 : speed + dV * 0.001;
     sidewaysSpeed = (abs(roll) > 15 && abs(roll) < 165) ? ((upsideDownPitch || upsideDownRoll) ? (roll < 0.0 ? 180.0 + roll : 180.0 - roll) : roll) : 0;
 
     cameraPosition += speed * normalize(cameraTarget - cameraPosition) + (sidewaysSpeed / 360.0) * normalize(cross(cameraTarget - cameraPosition, vec3(0.0f, 0.1f, 0.0f)));
 
-    // glutWarpPointer(300, 300);
     glutSwapBuffers();
-    // std::cout << roll << " " << speed << " " << throttle << dV << std::endl;
-    //   std::cout << cameraND.x << " " << cameraND.y << " " << cameraND.z << std::endl;
-    // std::cout << (sin((pitch * M_PI / 180.0) - M_PI) / 2) << std::endl;
-
-    // console:
-    std::cout << "Speed: " << speed << std::endl;
-    std::cout << "Throttle: " << throttle * 100 << "%" << std::endl;
-    std::cout << "Altitude: " << "TODO!" << std::endl;
-    std::cout << "Roll: " << roll << " degrees" << std::endl;
-    std::cout << "Pitch: " << pitch << " degrees" << std::endl;
-    std::cout << "Upside down by roll: " << upsideDownRoll << std::endl;
-    std::cout << "Upside down by pitch: " << upsideDownPitch << std::endl;
-    std::cout << "\033[2J"; // clear screen
     glutSwapBuffers();
     printDebugInfo();
 }
@@ -419,7 +388,6 @@ int main(int argc, char **argv)
     glutInitContextVersion(3, 2);
     // glutInitWindowSize(1920, 1080);
     glutInitWindowSize(800, 600);
-    // glutToggleFullScreen();
     glutCreateWindow("Flight simulator");
     glutDisplayFunc(display);
     init();

@@ -8,11 +8,9 @@ vec3 *vertexArray;
 Model *tm;
 GLuint tex1, tex2, stex;
 TextureData ttex;
-// double movementSpeed = 0.5;
 vec3 cameraDirection;
 vec3 normalCameraDirection(0.683106f, 0.321681f, 0.655658f);
 vec3 cameraPosition(50.0f, 20.f, -100.0f);
-// vec3 cameraRotation(0.0f, 1.0f, 0.0f);
 mat4 orientation = mat4(1.0f);
 
 vec2 direction(0.0f, 0.0f);
@@ -110,17 +108,6 @@ Model *GenerateTerrain(TextureData *tex)
 
 void keyboardPress()
 {
-	/*
-	if (glutKeyIsDown('d'))
-		cameraPosition += movementSpeed * normalize(cross(normalCameraDirection, vec3(0.0f, 0.1f, 0.0f)));
-	else if (glutKeyIsDown('a'))
-		cameraPosition -= movementSpeed * normalize(cross(normalCameraDirection, vec3(0.0f, 0.1f, 0.0f)));
-	else if (glutKeyIsDown('w'))
-		cameraPosition += movementSpeed * normalCameraDirection;
-	else if (glutKeyIsDown('s'))
-		cameraPosition -= movementSpeed * normalCameraDirection;
-	*/
-
 	if (glutKeyIsDown('d'))
 	{
 		if (roll == 89)
@@ -197,9 +184,9 @@ void keyboardPress()
 	lastPitch = pitch;
 	lastRoll = roll;
 
-	if (glutKeyIsDown('r'))
-		throttle += 1;
-	else if (glutKeyIsDown('f') && throttle > 0.0)
+	if (glutKeyIsDown('r') && throttle + 0.05 <= 1.01)
+		throttle += 0.05;
+	else if (glutKeyIsDown('f') && throttle - 0.05 >= 0.0)
 		throttle -= 0.05;
 }
 
@@ -218,18 +205,3 @@ mat4 rotationMatrix(vec3 axis, float angle)
 		t * x * z - s * y, t * y * z + s * x, t * z * z + c, 0,
 		0, 0, 0, 1);
 }
-
-/*void mouseMoved(int x, int y)
-{
-	float change_x = (x - 300) * 0.000025f;
-	float change_y = (300 - y) * 0.000025f;
-	direction.x += change_x;
-	direction.y += change_y;
-	cameraDirection.x = cos((180.0 / M_PI) * direction.x);
-	cameraDirection.y = sin((180.0 / M_PI) * direction.y);
-	cameraDirection.z = sin((180.0 / M_PI) * direction.x);
-	normalCameraDirection = normalize(cameraDirection);
-	// std::cout << normalCameraDirection.x << " " << normalCameraDirection.y << " " << normalCameraDirection.z << std::endl;
-	// printf("%d %d\n", x, y);
-	glutWarpPointer(300, 300);
-}*/
