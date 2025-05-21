@@ -7,7 +7,7 @@ unsigned int vertexBufferObjID;
 
 GLint mdlMxloc, transMxLoc;
 Model *skybox;
-Model* cockpitQuad;
+Model *cockpitQuad;
 
 unsigned int SkyTex;
 GLuint cockpitTex;
@@ -18,16 +18,14 @@ GLuint cockpitVBO, cockpitVAO;
 // 2 triangles forming a rectangle
 float cockpitVerts[] = {
     // x,    y,   z,   u,  v
-    -1.0f, -1.0f, 0,   0.0f, 0.0f, // bottom left
-     1.0f, -1.0f, 0,   1.0f, 0.0f, // bottom right
-     1.0f, -0.3f, 0,   1.0f, 1.0f, // top right
+    -1.0f, -1.0f, 0, 0.0f, 0.0f, // bottom left
+    1.0f, -1.0f, 0, 1.0f, 0.0f,  // bottom right
+    1.0f, -0.3f, 0, 1.0f, 1.0f,  // top right
 
-    -1.0f, -1.0f, 0,   0.0f, 0.0f, // bottom left
-     1.0f, -0.3f, 0,   1.0f, 1.0f, // top right
-    -1.0f, -0.3f, 0,   0.0f, 1.0f  // top left
+    -1.0f, -1.0f, 0, 0.0f, 0.0f, // bottom left
+    1.0f, -0.3f, 0, 1.0f, 1.0f,  // top right
+    -1.0f, -0.3f, 0, 0.0f, 1.0f  // top left
 };
-
-
 
 void init(void)
 {
@@ -42,21 +40,13 @@ void init(void)
     printError("GL inits");
 
     // Load and compile shader
-    //overlayprogram = loadShaders("over.vert", "over.frag");
+    // overlayprogram = loadShaders("over.vert", "over.frag");
     program = loadShaders("terrain3.vert", "terrain3.frag");
     glUseProgram(program);
 
- 
-   
-
     printError("init shader");
 
-
-
-
     skybox = LoadModel("../resources/skyboxfull.obj");
-    
-
 
     // load and bind texture
     glActiveTexture(GL_TEXTURE0);
@@ -82,7 +72,7 @@ void init(void)
     glBindTexture(GL_TEXTURE_2D, SkyTex);
     LoadTGATextureSimple("../resources/SkyBoxFull.tga", &SkyTex);
     glUniform1i(glGetUniformLocation(program, "sky"), 3);
-    //COCKPIT
+    // COCKPIT
 
     // glUseProgram(overlayprogram);
     // glGenVertexArrays(1, &cockpitVAO);
@@ -102,7 +92,6 @@ void init(void)
 
     // glBindVertexArray(0);
 
-
     // glActiveTexture(GL_TEXTURE4);
     // glGenTextures(1, &cockpitTex);
     // glBindTexture(GL_TEXTURE_2D, cockpitTex);
@@ -112,9 +101,7 @@ void init(void)
     // glEnable(GL_BLEND);
     // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-
     glUniformMatrix4fv(glGetUniformLocation(program, "projMatrix"), 1, GL_TRUE, projectionMatrix.m);
-
 
     // Load terrain data
 
@@ -145,9 +132,9 @@ void display(void)
     printError("pre display");
 
     glUseProgram(program);
-  
-    vec3 cameraUp = Rz((roll * M_PI) / 180) * vec3(0, 1, 0);
 
+    /*
+    vec3 cameraUp = Rz((roll * M_PI) / 180) * vec3(0, 1, 0);
     vec3 right = normalize(cross(cameraUp, normalCameraDirection));
     mat3 pitchRotation = rotationMatrix(right, pitch * M_PI / 180.0);
     vec3 pitchedForward = pitchRotation * normalCameraDirection;
@@ -158,6 +145,37 @@ void display(void)
     mat4 worldToView = lookAt(cameraPosition.x, cameraPosition.y, cameraPosition.z,
                               cameraTarget.x, cameraTarget.y, cameraTarget.z,
                               cameraUp.x, cameraUp.y, cameraUp.z);
+                              */
+
+    // Convert input angles to radians
+    float pitchRad = deltaPitch * M_PI / 180.0f;
+    float rollRad = deltaRoll * M_PI / 180.0f;
+    deltaPitch = 0;
+    deltaRoll = 0;
+
+    // Get current local axes from orientation matrix
+    vec3 forward = normalize(vec3(orientation * vec4(0, 0, -1, 0)));
+    vec3 right = normalize(vec3(orientation * vec4(1, 0, 0, 0)));
+
+    // Apply pitch: rotate around current local right
+    mat4 pitchMatrix = rotationMatrix(right, pitchRad);
+    orientation = pitchMatrix * orientation;
+
+    // Recompute forward after pitch
+    forward = normalize(vec3(orientation * vec4(0, 0, -1, 0)));
+
+    // Apply roll: rotate around updated forward axis
+    mat4 rollMatrix = rotationMatrix(forward, rollRad);
+    orientation = rollMatrix * orientation;
+
+    // Now get final camera basis
+    forward = normalize(vec3(orientation * vec4(0, 0, -1, 0)));
+    vec3 up = normalize(vec3(orientation * vec4(0, 1, 0, 0)));
+
+    // Compute camera target and view matrix
+    vec3 cameraTarget = cameraPosition + forward;
+
+    mat4 worldToView = lookAt(cameraPosition, cameraTarget, up);
 
     mat4 modelToWorld = IdentityMatrix();
     mat4 total = worldToView * modelToWorld;
@@ -165,56 +183,53 @@ void display(void)
     glUniformMatrix4fv(mdlMxloc, 1, GL_TRUE, total.m);
 
     // Skybox
-	glDisable(GL_CULL_FACE);
-	glDisable(GL_DEPTH_TEST);
-	mat4 skyModel = T(cameraPosition.x, cameraPosition.y, cameraPosition.z);
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_DEPTH_TEST);
+    mat4 skyModel = T(cameraPosition.x, cameraPosition.y, cameraPosition.z);
     glUniformMatrix4fv(glGetUniformLocation(program, "trans"), 1, GL_TRUE, skyModel.m);
 
-	glUniform1i(glGetUniformLocation(program, "texUnit"), 3);
-	DrawModel(skybox, program, "inPosition", "inNormal", "inTexCoord");
- 
-	glEnable(GL_DEPTH_TEST);
-	
-	glEnable(GL_CULL_FACE);
+    glUniform1i(glGetUniformLocation(program, "texUnit"), 3);
+    DrawModel(skybox, program, "inPosition", "inNormal", "inTexCoord");
+
+    glEnable(GL_DEPTH_TEST);
+
+    glEnable(GL_CULL_FACE);
     glUniform1i(glGetUniformLocation(program, "texUnit"), 0); // Reset for terrain
 
-    
+    for (int x = 0; x <= 2; x++)
+    {
+        for (int z = 0; z <= 2; z++)
+        {
+            // Snap offset to player's tile-based grid
+            float tileX = floor(cameraPosition.x / ttex.width) * ttex.width;
+            float tileZ = floor(cameraPosition.z / ttex.height) * ttex.height;
 
-    for (int x = 0; x <= 2; x++) {
-        for (int z = 0; z <= 2; z++) {
-        // Snap offset to player's tile-based grid
-        float tileX = floor(cameraPosition.x / ttex.width) * ttex.width;
-        float tileZ = floor(cameraPosition.z / ttex.height) * ttex.height;
+            float offsetX = tileX + x * (ttex.width - 1);
+            float offsetZ = tileZ + z * (ttex.height - 1);
+            mat4 model = T(offsetX - x, 0, offsetZ - z);
+            glUniformMatrix4fv(transMxLoc, 1, GL_TRUE, model.m);
 
-        
-        float offsetX = tileX + x * (ttex.width -1 );
-        float offsetZ = tileZ + z *( ttex.height -1 );
-        mat4 model = T(offsetX - x, 0, offsetZ -z);
-        glUniformMatrix4fv(transMxLoc, 1, GL_TRUE, model.m);
-     
-        DrawModel(tm, program, "inPosition", "inNormal", "inTexCoord");
+            DrawModel(tm, program, "inPosition", "inNormal", "inTexCoord");
         }
     }
 
-        // // Overlay cockpit
-        // glUseProgram(overlayprogram); // <- A simple shader with no lighting, just texture
-        // glDisable(GL_DEPTH_TEST);
+    // // Overlay cockpit
+    // glUseProgram(overlayprogram); // <- A simple shader with no lighting, just texture
+    // glDisable(GL_DEPTH_TEST);
 
-        // mat4 ort = ortho(-1, 1, -1, 1, -1, 1);
-        // glUniformMatrix4fv(glGetUniformLocation(overlayprogram, "proj"), 1, GL_TRUE, ort.m);
+    // mat4 ort = ortho(-1, 1, -1, 1, -1, 1);
+    // glUniformMatrix4fv(glGetUniformLocation(overlayprogram, "proj"), 1, GL_TRUE, ort.m);
 
-        // glActiveTexture(GL_TEXTURE0);
-        // glBindTexture(GL_TEXTURE_2D, cockpitTex);
-        // glUniform1i(glGetUniformLocation(overlayprogram, "tex"), 0);
+    // glActiveTexture(GL_TEXTURE0);
+    // glBindTexture(GL_TEXTURE_2D, cockpitTex);
+    // glUniform1i(glGetUniformLocation(overlayprogram, "tex"), 0);
 
-        // glBindVertexArray(cockpitVAO);
-        // glDrawArrays(GL_TRIANGLES, 0, 6);
+    // glBindVertexArray(cockpitVAO);
+    // glDrawArrays(GL_TRIANGLES, 0, 6);
 
-        // glBindVertexArray(0);
-        // glEnable(GL_DEPTH_TEST);
+    // glBindVertexArray(0);
+    // glEnable(GL_DEPTH_TEST);
 
-
-   
     printError("display 2");
 
     keyboardPress();
@@ -230,9 +245,9 @@ void display(void)
     else if (dV < 0)
         dV += speed * airDragFactor;
     speed += dV * 0.001;
+    sidewaysSpeed = (abs(roll) > 15 && abs(roll) < 165) ? ((upsideDownPitch || upsideDownRoll) ? (roll < 0.0 ? 180.0 + roll : 180.0 - roll) : roll) : 0;
 
-    // cameraPosition += speed * normalize(vec3(cameraTarget.x - cameraPosition.x, cameraTarget.y - cameraPosition.y, cameraTarget.z - cameraPosition.z));
-    cameraPosition += speed * normalize(cameraTarget - cameraPosition) + speed * (roll / 45) * normalize(cross(cameraTarget - cameraPosition, vec3(0.0f, 0.1f, 0.0f)));
+    cameraPosition += speed * normalize(cameraTarget - cameraPosition) + (sidewaysSpeed / 360.0) * normalize(cross(cameraTarget - cameraPosition, vec3(0.0f, 0.1f, 0.0f)));
 
     // glutWarpPointer(300, 300);
     glutSwapBuffers();
@@ -245,7 +260,9 @@ void display(void)
     std::cout << "Throttle: " << throttle * 100 << "%" << std::endl;
     std::cout << "Altitude: " << "TODO!" << std::endl;
     std::cout << "Roll: " << roll << " degrees" << std::endl;
-    std::cout << "Pitch: " << -1 * pitch << " degrees" << std::endl;
+    std::cout << "Pitch: " << pitch << " degrees" << std::endl;
+    std::cout << "Upside down by roll: " << upsideDownRoll << std::endl;
+    std::cout << "Upside down by pitch: " << upsideDownPitch << std::endl;
     std::cout << "\033[2J"; // clear screen
 }
 

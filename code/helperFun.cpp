@@ -13,16 +13,24 @@ vec3 cameraDirection;
 vec3 normalCameraDirection(0.683106f, 0.321681f, 0.655658f);
 vec3 cameraPosition(50.0f, 20.f, -100.0f);
 // vec3 cameraRotation(0.0f, 1.0f, 0.0f);
+mat4 orientation = mat4(1.0f);
 
 vec2 direction(0.0f, 0.0f);
 // physics
 float throttle = 0.05; // 0 to 1
-float throttleFactor = 0.5;
+float throttleFactor = 0.75;
 float speed = 0.05; // 0 to 1
-float airDragFactor = 0.2;
-float verticalDragFactor = 0.2;
-int roll = 0;  // -45 to + 45 degrees
-int pitch = 0; // -45 to + 45 degrees
+float sidewaysSpeed = 0;
+float airDragFactor = 0.35;
+float verticalDragFactor = 0.25;
+int lastRoll = 0;
+int lastPitch = 0;
+int roll = 0;
+int pitch = 0;
+int deltaRoll = 0;
+int deltaPitch = 0;
+bool upsideDownRoll = false;
+bool upsideDownPitch = false;
 
 Model *GenerateTerrain(TextureData *tex)
 {
@@ -113,14 +121,81 @@ void keyboardPress()
 		cameraPosition -= movementSpeed * normalCameraDirection;
 	*/
 
-	if (glutKeyIsDown('d') && roll < 45)
-		roll += 1;
-	else if (glutKeyIsDown('a') && roll > -45)
-		roll -= 1;
-	else if (glutKeyIsDown('w') && pitch < 45)
-		pitch += 1;
-	else if (glutKeyIsDown('s') && pitch > -45)
-		pitch -= 1;
+	if (glutKeyIsDown('d'))
+	{
+		if (roll == 89)
+		{
+			upsideDownRoll = true;
+			roll = 90;
+		}
+		else if (roll == 180)
+			roll = -179;
+		else if (roll == -90)
+		{
+			upsideDownRoll = false;
+			roll = -89;
+		}
+		else
+			roll += 1;
+	}
+
+	else if (glutKeyIsDown('a'))
+	{
+		if (roll == -89)
+		{
+			upsideDownRoll = true;
+			roll = -90;
+		}
+		else if (roll == -179)
+			roll = 180;
+		else if (roll == 90)
+		{
+			upsideDownRoll = false;
+			roll = 89;
+		}
+		else
+			roll -= 1;
+	}
+
+	if (glutKeyIsDown('s'))
+	{
+		if (pitch == 89)
+		{
+			upsideDownPitch = true;
+			pitch = 90;
+		}
+		else if (pitch == 180)
+			pitch = -179;
+		else if (pitch == -90)
+		{
+			upsideDownPitch = false;
+			pitch = -89;
+		}
+		else
+			pitch += 1;
+	}
+
+	else if (glutKeyIsDown('w'))
+	{
+		if (pitch == -89)
+		{
+			upsideDownPitch = true;
+			pitch = -90;
+		}
+		else if (pitch == -179)
+			pitch = 180;
+		else if (pitch == 90)
+		{
+			upsideDownPitch = false;
+			pitch = 89;
+		}
+		else
+			pitch -= 1;
+	}
+	deltaPitch += pitch - lastPitch;
+	deltaRoll += roll - lastRoll;
+	lastPitch = pitch;
+	lastRoll = roll;
 
 	if (glutKeyIsDown('r') && throttle < 1.0)
 		throttle += 0.05;
