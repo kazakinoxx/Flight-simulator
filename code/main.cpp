@@ -122,52 +122,6 @@ void init(void)
         free(textures[i].imageData);
     }
 
-    // // Fill instances
-    // for (int x = 0; x < width; ++x) {
-    //     for (int z = 0; z < height; ++z) {
-    //         InstanceData data;
-    //         data.position = vec3(x * 5, 0, z * 5);
-    //         data.layer = rand() % 7;
-    //         instances.push_back(data);
-    //     }
-    // }
-
-    // // Generate and bind buffer
-    // GLuint instanceVBO;
-    // glGenBuffers(1, &instanceVBO);
-    // glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    // glBufferData(GL_ARRAY_BUFFER, instances.size() * sizeof(InstanceData), instances.data(), GL_STATIC_DRAW);
-
-    // glEnableVertexAttribArray(2);
-    // glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)offsetof(InstanceData, position));
-    // glVertexAttribDivisor(2, 1);
-
-    // glEnableVertexAttribArray(3);
-    // glVertexAttribPointer(3, 1, GL_INT, GL_FALSE, sizeof(InstanceData), (void*)offsetof(InstanceData, layer));
-    // glVertexAttribDivisor(3, 1);
-
-    // glGenVertexArrays(1, &vao);
-    // glBindVertexArray(vao);
-
-    // // Bind instanceVBO (already declared globally)
-    // glGenBuffers(1, &instanceVBO);
-    // glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    // glBufferData(GL_ARRAY_BUFFER, instances.size() * sizeof(InstanceData), instances.data(), GL_STATIC_DRAW);
-
-    // // Query locations after program linked
-    // GLuint posAttrib = glGetAttribLocation(program, "instancePosition");
-    // GLuint layerAttrib = glGetAttribLocation(program, "instanceLayer");
-
-    // // Setup vertex attrib pointers for instance data
-    // glEnableVertexAttribArray(posAttrib);
-    // glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)offsetof(InstanceData, position));
-    // glVertexAttribDivisor(posAttrib, 1);
-
-    // glEnableVertexAttribArray(layerAttrib);
-    // glVertexAttribPointer(layerAttrib, 1, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)offsetof(InstanceData, layer));
-    // glVertexAttribDivisor(layerAttrib, 1);
-
-    // glBindVertexArray(0);
 
     glActiveTexture(GL_TEXTURE2);
     glGenTextures(1, &tex2);
@@ -244,10 +198,7 @@ void display(void)
     int layer = (int)(t / 50) % 6;
     glUniform1i(glGetUniformLocation(program, "layer"), layer);
 
-    // Update instance data if needed
-    // glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    // glBufferData(GL_ARRAY_BUFFER, instances.size() * sizeof(InstanceData),
-    //             instances.data(), GL_DYNAMIC_DRAW);
+    
 
     // ------ MAIN RENDER PASS ------
     glUseProgram(program);
@@ -264,7 +215,7 @@ void display(void)
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
     mat4 skyModel = T(cameraPosition.x, cameraPosition.y, cameraPosition.z);
-    glUniformMatrix4fv(glGetUniformLocation(program, "trans"), 1, GL_TRUE, skyModel.m);
+    glUniformMatrix4fv(transMxLoc, 1, GL_TRUE, skyModel.m);
     glUniform1i(glGetUniformLocation(program, "texUnit"), 3);
     DrawModel(skybox, program, "inPosition", "inNormal", "inTexCoord");
     glEnable(GL_DEPTH_TEST);
@@ -286,11 +237,7 @@ void display(void)
         }
     }
 
-    // Render instances (uncomment and fix if you want to use this)
-    // glBindVertexArray(vao);
-    // glDrawArraysInstanced(GL_TRIANGLES, 0, vertexCount, (GLsizei)instances.size());
-    // glBindVertexArray(0);
-
+ 
     // ------ OVERLAY RENDER PASS ------
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -310,6 +257,7 @@ void display(void)
 
     // Reset state
     glEnable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
     glUseProgram(program);
     glutSwapBuffers();
     glutSwapBuffers();
