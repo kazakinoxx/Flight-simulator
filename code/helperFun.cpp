@@ -244,7 +244,7 @@ void updatePhysics()
 		dV -= speed * airDragFactor;
 	else if (dV < 0)
 		dV += speed * airDragFactor;
-	// speed = speed + dV * 0.005 > 0.995 ? 0.995 : speed + dV * 0.005;
+	speed = speed + dV * 0.005 > 0.995 ? 0.995 : speed + dV * 0.005;
 
 	// sidewaysSpeed = (abs(roll) > 15 && abs(roll) < 165) ? ((upsideDownPitch || upsideDownRoll) ? (roll < 0.0 ? 180.0 + roll : 180.0 - roll) : roll) : 0;
 	sidewaysSpeed = ((upsideDownPitch || upsideDownRoll) ? (roll < 0.0 ? 180.0 + roll : 180.0 - roll) : roll);
