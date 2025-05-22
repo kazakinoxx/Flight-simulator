@@ -8,7 +8,7 @@ vec3 *vertexArray;
 Model *tm;
 GLuint tex1, tex2, stex;
 TextureData ttex;
-vec3 cameraDirection(1.0f,0,1.0f);
+vec3 cameraDirection(1.0f, 0, 1.0f);
 vec3 normalCameraDirection(0.683106f, 0.321681f, 0.655658f);
 vec3 cameraPosition(50.0f, 20.f, -100.0f);
 mat4 orientation = mat4(1.0f);
@@ -251,9 +251,10 @@ void updatePhysics()
 		dV -= speed * airDragFactor;
 	else if (dV < 0)
 		dV += speed * airDragFactor;
-	speed = speed + dV * 0.005 > 0.995 ? 0.995 : speed + dV * 0.005;
+	// speed = speed + dV * 0.005 > 0.995 ? 0.995 : speed + dV * 0.005;
 
-	sidewaysSpeed = (abs(roll) > 15 && abs(roll) < 165) ? ((upsideDownPitch || upsideDownRoll) ? (roll < 0.0 ? 180.0 + roll : 180.0 - roll) : roll) : 0;
+	// sidewaysSpeed = (abs(roll) > 15 && abs(roll) < 165) ? ((upsideDownPitch || upsideDownRoll) ? (roll < 0.0 ? 180.0 + roll : 180.0 - roll) : roll) : 0;
+	sidewaysSpeed = ((upsideDownPitch || upsideDownRoll) ? (roll < 0.0 ? 180.0 + roll : 180.0 - roll) : roll);
 
-	cameraPosition += speed * normalize(cameraTarget - cameraPosition) + (sidewaysSpeed / 360.0) * normalize(cross(cameraTarget - cameraPosition, vec3(0.0f, 0.1f, 0.0f)));
+	cameraPosition += speed * normalize(cameraTarget - cameraPosition) + (float(sidewaysSpeed) / 360.0) * normalize(cross(cameraTarget - cameraPosition, vec3(0.0f, 0.1f, 0.0f)));
 }
