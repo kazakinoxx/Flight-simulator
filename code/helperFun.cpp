@@ -69,16 +69,16 @@ Model *GenerateTerrain(TextureData *tex)
 	for (x = 0; x < tex->width; x++)
 		for (z = 0; z < tex->height; z++)
 		{
-			// Vertex array. You need to scale this properly
+			// Vertex array.
 			vertexArray[(x + z * tex->width)].x = x / 1.0;
 			vertexArray[(x + z * tex->width)].y = tex->imageData[(x + z * tex->width) * (tex->bpp / 8)] / 2.0;
 			vertexArray[(x + z * tex->width)].z = z / 1.0;
-			// Normal vectors. You need to calculate these.
+			// Normal vectors.
 			normalArray[(x + z * tex->width)].x = 0.0;
 			normalArray[(x + z * tex->width)].y = 1.0;
 			normalArray[(x + z * tex->width)].z = 0.0;
 
-			//  Texture coordinates. You may want to scale them.
+			//  Texture coordinates.
 			texCoordArray[(x + z * tex->width)].x = x; // (float)x / tex->width;
 			texCoordArray[(x + z * tex->width)].y = z; // (float)z / tex->height;
 		}
@@ -216,32 +216,25 @@ void keyboardPress()
 
 void updatePhysics()
 {
-	// Convert input angles to radians
 	pitchRad = deltaPitch * M_PI / 180.0f;
 	rollRad = deltaRoll * M_PI / 180.0f;
 	deltaPitch = 0;
 	deltaRoll = 0;
 
-	// Get current local axes from orientation matrix
 	forward = normalize(vec3(orientation * vec4(0, 0, -1, 0)));
 	right = normalize(vec3(orientation * vec4(1, 0, 0, 0)));
 
-	// Apply pitch: rotate around current local right
 	pitchMatrix = rotationMatrix(right, pitchRad);
 	orientation = pitchMatrix * orientation;
 
-	// Recompute forward after pitch
 	forward = normalize(vec3(orientation * vec4(0, 0, -1, 0)));
 
-	// Apply roll: rotate around updated forward axis
 	rollMatrix = rotationMatrix(forward, rollRad);
 	orientation = rollMatrix * orientation;
 
-	// Get final camera basis
 	forward = normalize(vec3(orientation * vec4(0, 0, -1, 0)));
 	up = normalize(vec3(orientation * vec4(0, 1, 0, 0)));
 
-	// Get camera target and view WTW matrix
 	cameraTarget = cameraPosition + forward;
 
 	dV = throttle * throttleFactor + verticalDragFactor * (sin((pitch * M_PI / 180.0) - M_PI) / 2);

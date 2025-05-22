@@ -80,23 +80,19 @@ void init(void)
     glGenTextures(1, &stex);
     glBindTexture(GL_TEXTURE_2D_ARRAY, stex);
 
-    // Set the sampler uniform
     glUniform1i(glGetUniformLocation(program, "snowTex"), 1);
 
     GLint width = 512;
     GLint height = 512;
     int numLayer = 7;
 
-    // Allocate immutable storage
-    glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGB8, width, height, numLayer); // Use GL_RGB8 if bpp = 24
+    glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGB8, width, height, numLayer);
 
-    // Set texture parameters
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    // Upload each image to a layer
     for (int i = 0; i < numLayer; i++)
     {
         char filename[64];
@@ -115,13 +111,12 @@ void init(void)
             0,
             0, 0, i,          // x, y, z offsets
             width, height, 1, // width, height, depth
-            GL_RGB,           // format must match bpp
+            GL_RGB,
             GL_UNSIGNED_BYTE,
             textures[i].imageData);
 
         free(textures[i].imageData);
     }
-
 
     glActiveTexture(GL_TEXTURE2);
     glGenTextures(1, &tex2);
@@ -145,11 +140,11 @@ void init(void)
     glBindBuffer(GL_ARRAY_BUFFER, cockpitVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(cockpitVerts), cockpitVerts, GL_STATIC_DRAW);
 
-    // Position (3 floats)
+    // Position
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
-    // TexCoord (2 floats)
+    // TexCoord
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
@@ -188,19 +183,14 @@ void init(void)
 
 void display(void)
 {
-    // Clear the screen (set clear color BEFORE clearing)
     glClearColor(1.0, 1.0, 1.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Update time
     t = (GLfloat)glutGet(GLUT_ELAPSED_TIME) / 100;
 
     int layer = (int)(t / 50) % 6;
     glUniform1i(glGetUniformLocation(program, "layer"), layer);
 
-    
-
-    // ------ MAIN RENDER PASS ------
     glUseProgram(program);
 
     keyboardPress();
@@ -211,7 +201,7 @@ void display(void)
     mat4 total = worldToView * modelToWorld;
     glUniformMatrix4fv(mdlMxloc, 1, GL_TRUE, total.m);
 
-    // Render skybox
+    // skybox
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
     mat4 skyModel = T(cameraPosition.x, cameraPosition.y, cameraPosition.z);
@@ -222,7 +212,7 @@ void display(void)
     glEnable(GL_CULL_FACE);
     glUniform1i(glGetUniformLocation(program, "texUnit"), 0);
 
-    // Render terrain tiles
+    // terrain
     for (int x = 0; x <= 3; x++)
     {
         for (int z = 0; z <= 3; z++)
@@ -237,8 +227,6 @@ void display(void)
         }
     }
 
- 
-    // ------ OVERLAY RENDER PASS ------
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glUseProgram(overlayprogram);
@@ -255,7 +243,6 @@ void display(void)
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
 
-    // Reset state
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);
     glUseProgram(program);
@@ -270,7 +257,7 @@ int main(int argc, char **argv)
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH);
     glutInitContextVersion(3, 2);
     // glutInitWindowSize(1920, 1080);
-    glutInitWindowSize(800, 600);
+    glutInitWindowSize(1200, 800);
     glutCreateWindow("Flight simulator");
     glutDisplayFunc(display);
     init();
