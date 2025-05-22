@@ -8,7 +8,7 @@ vec3 *vertexArray;
 Model *tm;
 GLuint tex1, tex2, stex;
 TextureData ttex;
-vec3 cameraDirection;
+vec3 cameraDirection(1.0f,0,1.0f);
 vec3 normalCameraDirection(0.683106f, 0.321681f, 0.655658f);
 vec3 cameraPosition(50.0f, 20.f, -100.0f);
 mat4 orientation = mat4(1.0f);
