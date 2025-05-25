@@ -248,8 +248,8 @@ void updatePhysics()
 
 	forward = normalize(vec3(orientation * vec4(0, 0, -1, 0)));
 
-	up = normalize(vec3(orientation * vec4(0, -1, 0, 0)));
-	turnMatrix = rotationMatrix(up, speed * absRollRad / 45.0);
+	// up = normalize(vec3(orientation * vec4(0, -1, 0, 0)));
+	turnMatrix = rotationMatrix(vec3(0, -1, 0), speed * absRollRad / 90.0);
 	orientation = turnMatrix * orientation;
 
 	forward = normalize(vec3(orientation * vec4(0, 0, -1, 0)));
@@ -268,7 +268,7 @@ void updatePhysics()
 	sidewaysSpeed = sin(((upsideDownRoll) ? (roll < 0.0 ? 180.0 + roll : 180.0 - roll) : roll) * M_PI / 180.0);
 	// sidewaysSpeed = 0.0;
 
-	cameraPosition += speed * normalize(cameraTarget - cameraPosition) + (speed / 4) * sidewaysSpeed * normalize(cross(cameraTarget - cameraPosition, vec3(0.0f, 0.1f, 0.0f)));
+	cameraPosition += speed * normalize(cameraTarget - cameraPosition) + speed * sidewaysSpeed * normalize(cross(cameraTarget - cameraPosition, vec3(0.0f, 0.1f, 0.0f)));
 
 	cameraTarget = cameraPosition + forward;
 }
