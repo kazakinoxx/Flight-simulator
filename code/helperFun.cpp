@@ -17,6 +17,7 @@ vec3 right;
 vec3 up;
 mat4 pitchMatrix;
 mat4 rollMatrix;
+mat4 turnMatrix;
 vec3 cameraTarget;
 vec2 direction(0.0f, 0.0f);
 
@@ -35,6 +36,7 @@ float rollRad = 0.0;
 float pitchRad = 0.0;
 int deltaRoll = 0;
 int deltaPitch = 0;
+float absRollRad = 0.0;
 bool upsideDownRoll = false;
 
 mat4 rotationMatrix(vec3 axis, float angle)
@@ -193,6 +195,8 @@ void updatePhysics()
 {
 	pitchRad = deltaPitch * M_PI / 180.0f;
 	rollRad = deltaRoll * M_PI / 180.0f;
+	absRollRad = ((upsideDownRoll) ? (roll < 0.0 ? 180.0 + roll : 180.0 - roll) : roll) * M_PI / 180.0f;
+
 	deltaPitch = 0;
 	deltaRoll = 0;
 
@@ -206,6 +210,12 @@ void updatePhysics()
 
 	rollMatrix = rotationMatrix(forward, rollRad);
 	orientation = rollMatrix * orientation;
+
+	forward = normalize(vec3(orientation * vec4(0, 0, -1, 0)));
+
+	up = normalize(vec3(orientation * vec4(0, -1, 0, 0)));
+	turnMatrix = rotationMatrix(up, speed * absRollRad / 45.0);
+	orientation = turnMatrix * orientation;
 
 	forward = normalize(vec3(orientation * vec4(0, 0, -1, 0)));
 	up = normalize(vec3(orientation * vec4(0, 1, 0, 0)));
@@ -223,7 +233,7 @@ void updatePhysics()
 	sidewaysSpeed = sin(((upsideDownRoll) ? (roll < 0.0 ? 180.0 + roll : 180.0 - roll) : roll) * M_PI / 180.0);
 	// sidewaysSpeed = 0.0;
 
-	cameraPosition += speed * normalize(cameraTarget - cameraPosition) + (sidewaysSpeed)*normalize(cross(cameraTarget - cameraPosition, vec3(0.0f, 0.1f, 0.0f)));
+	cameraPosition += speed * normalize(cameraTarget - cameraPosition) + speed * sidewaysSpeed * normalize(cross(cameraTarget - cameraPosition, vec3(0.0f, 0.1f, 0.0f)));
 
 	cameraTarget = cameraPosition + forward;
 }
