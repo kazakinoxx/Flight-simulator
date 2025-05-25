@@ -36,7 +36,6 @@ float pitchRad = 0.0;
 int deltaRoll = 0;
 int deltaPitch = 0;
 bool upsideDownRoll = false;
-bool upsideDownPitch = false;
 
 mat4 rotationMatrix(vec3 axis, float angle)
 {
@@ -170,37 +169,13 @@ void keyboardPress()
 
 	if (glutKeyIsDown('s'))
 	{
-		if (pitch == 89)
-		{
-			upsideDownPitch = true;
-			pitch = 90;
-		}
-		else if (pitch == 180)
-			pitch = -179;
-		else if (pitch == -90)
-		{
-			upsideDownPitch = false;
-			pitch = -89;
-		}
-		else
+		if (pitch != 89)
 			pitch += 1;
 	}
 
 	else if (glutKeyIsDown('w'))
 	{
-		if (pitch == -89)
-		{
-			upsideDownPitch = true;
-			pitch = -90;
-		}
-		else if (pitch == -179)
-			pitch = 180;
-		else if (pitch == 90)
-		{
-			upsideDownPitch = false;
-			pitch = 89;
-		}
-		else
+		if (pitch != -89)
 			pitch -= 1;
 	}
 	deltaPitch += pitch - lastPitch;
@@ -235,8 +210,6 @@ void updatePhysics()
 	forward = normalize(vec3(orientation * vec4(0, 0, -1, 0)));
 	up = normalize(vec3(orientation * vec4(0, 1, 0, 0)));
 
-	cameraTarget = cameraPosition + forward;
-
 	dV = throttle * throttleFactor + verticalDragFactor * (sin((pitch * M_PI / 180.0) - M_PI) / 2);
 	if ((abs(speed + dV) - speed * airDragFactor) < 0)
 		speed = 0;
@@ -247,7 +220,10 @@ void updatePhysics()
 	speed = speed + dV * 0.005 > 0.995 ? 0.995 : speed + dV * 0.005;
 
 	// sidewaysSpeed = (abs(roll) > 15 && abs(roll) < 165) ? ((upsideDownPitch || upsideDownRoll) ? (roll < 0.0 ? 180.0 + roll : 180.0 - roll) : roll) : 0;
-	sidewaysSpeed = ((upsideDownPitch || upsideDownRoll) ? (roll < 0.0 ? 180.0 + roll : 180.0 - roll) : roll);
+	sidewaysSpeed = sin(((upsideDownRoll) ? (roll < 0.0 ? 180.0 + roll : 180.0 - roll) : roll) * M_PI / 180.0);
+	// sidewaysSpeed = 0.0;
 
-	cameraPosition += speed * normalize(cameraTarget - cameraPosition) + (float(sidewaysSpeed) / 360.0) * normalize(cross(cameraTarget - cameraPosition, vec3(0.0f, 0.1f, 0.0f)));
+	cameraPosition += speed * normalize(cameraTarget - cameraPosition) + (sidewaysSpeed)*normalize(cross(cameraTarget - cameraPosition, vec3(0.0f, 0.1f, 0.0f)));
+
+	cameraTarget = cameraPosition + forward;
 }

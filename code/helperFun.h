@@ -34,7 +34,6 @@ extern int deltaPitch;
 extern int roll;
 extern int pitch;
 extern bool upsideDownRoll;
-extern bool upsideDownPitch;
 
 Model *GenerateTerrain(TextureData *tex);
 void keyboardPress();
