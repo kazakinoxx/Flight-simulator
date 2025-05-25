@@ -5,6 +5,7 @@
 #include "LoadTGA.h"
 #include <math.h>
 #include <iostream>
+#include <vector>
 
 extern GLfloat t;
 
@@ -39,3 +40,31 @@ Model *GenerateTerrain(TextureData *tex);
 void keyboardPress();
 mat4 rotationMatrix(vec3 axis, float angle);
 void updatePhysics();
+
+
+struct InstanceData;
+
+void printDebugInfo();
+void multiGen();
+
+void multiBind(int numLayer, int width, int height);
+
+extern std::vector<InstanceData> instances;
+
+extern unsigned int vertexBufferObjID;
+
+extern GLint mdlMxloc, transMxLoc;
+extern Model *skybox;
+extern Model *cockpitQuad;
+
+extern unsigned int SkyTex;
+extern GLuint cockpitTex;
+extern GLuint overlayprogram;
+
+extern GLuint cockpitVBO, cockpitVAO;
+extern GLuint vao;
+
+
+extern GLuint instanceVBO;
+
+extern TextureData textures[8];
