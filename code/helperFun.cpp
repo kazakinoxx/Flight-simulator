@@ -38,6 +38,41 @@ int deltaRoll = 0;
 int deltaPitch = 0;
 float absRollRad = 0.0;
 bool upsideDownRoll = false;
+std::vector<InstanceData> instances;
+
+unsigned int vertexBufferObjID;
+
+GLint mdlMxloc, transMxLoc;
+Model *skybox;
+Model *cockpitQuad;
+
+unsigned int SkyTex;
+GLuint cockpitTex;
+GLuint overlayprogram;
+
+GLuint cockpitVBO, cockpitVAO;
+GLuint vao;
+
+GLuint instanceVBO;
+
+TextureData textures[8];
+
+
+struct InstanceData
+{
+    vec3 position;
+    float layer;
+};
+
+void printDebugInfo()
+{
+    std::cout << "Speed: " << speed << std::endl;
+    std::cout << "Throttle: " << throttle * 100 << "%" << std::endl;
+    std::cout << "Altitude: " << cameraPosition.y << std::endl;
+    std::cout << "Roll: " << roll << " degrees" << std::endl;
+    std::cout << "Pitch: " << pitch << " degrees" << std::endl;
+    std::cout << "\033[2J"; // clear screen
+}
 
 mat4 rotationMatrix(vec3 axis, float angle)
 {
@@ -214,7 +249,7 @@ void updatePhysics()
 	forward = normalize(vec3(orientation * vec4(0, 0, -1, 0)));
 
 	up = normalize(vec3(orientation * vec4(0, -1, 0, 0)));
-	turnMatrix = rotationMatrix(up, speed * absRollRad / 45.0);
+	turnMatrix = rotationMatrix(up, speed * absRollRad / 100.0);
 	orientation = turnMatrix * orientation;
 
 	forward = normalize(vec3(orientation * vec4(0, 0, -1, 0)));
@@ -236,4 +271,51 @@ void updatePhysics()
 	cameraPosition += speed * normalize(cameraTarget - cameraPosition) + speed * sidewaysSpeed * normalize(cross(cameraTarget - cameraPosition, vec3(0.0f, 0.1f, 0.0f)));
 
 	cameraTarget = cameraPosition + forward;
+}
+
+ void multiGen(){
+    // terrain
+    for (int x = 0; x <= 3; x++)
+    {
+        for (int z = 0; z <= 3; z++)
+        {
+            float tileX = floor(cameraPosition.x / ttex.width) * ttex.width;
+            float tileZ = floor(cameraPosition.z / ttex.height) * ttex.height;
+            float offsetX = tileX + x * (ttex.width - 1);
+            float offsetZ = tileZ + z * (ttex.height - 1);
+            mat4 model = T(offsetX - x, 0, offsetZ - z);
+            glUniformMatrix4fv(transMxLoc, 1, GL_TRUE, model.m);
+            DrawModel(tm, program, "inPosition", "inNormal", "inTexCoord");
+        }
+    }
+ }
+
+
+void multiBind(int numLayer, int width, int height){
+
+	    for (int i = 0; i < numLayer; i++)
+    {
+        char filename[64];
+        sprintf(filename, "../resources/groundsm_wht0%i.tga", i + 1);
+
+        LoadTGATexture(filename, &textures[i]);
+
+        if (textures[i].bpp != 24)
+        {
+            printf("ERROR: Unexpected bpp in texture %d: %d\n", i, textures[i].bpp);
+            continue;
+        }
+
+        glTexSubImage3D(
+            GL_TEXTURE_2D_ARRAY,
+            0,
+            0, 0, i,          
+            width, height, 1, 
+            GL_RGB,
+            GL_UNSIGNED_BYTE,
+            textures[i].imageData);
+
+        free(textures[i].imageData);
+    }
+
 }

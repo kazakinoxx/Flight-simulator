@@ -2,53 +2,18 @@
 #include "helperFun.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <vector>
-
-struct InstanceData
-{
-    vec3 position;
-    float layer;
-};
-
-void printDebugInfo()
-{
-    std::cout << "Speed: " << speed << std::endl;
-    std::cout << "Throttle: " << throttle * 100 << "%" << std::endl;
-    std::cout << "Altitude: " << cameraPosition.y << std::endl;
-    std::cout << "Roll: " << roll << " degrees" << std::endl;
-    std::cout << "Pitch: " << pitch << " degrees" << std::endl;
-    std::cout << "\033[2J"; // clear screen
-}
-
-std::vector<InstanceData> instances;
-
-unsigned int vertexBufferObjID;
-
-GLint mdlMxloc, transMxLoc;
-Model *skybox;
-Model *cockpitQuad;
-
-unsigned int SkyTex;
-GLuint cockpitTex;
-GLuint overlayprogram;
-
-GLuint cockpitVBO, cockpitVAO;
-GLuint vao;
-// 2 triangles forming a rectangle
 float cockpitVerts[] = {
-    // x,    y,   z,   u,  v
-    -1.0f, -1.0f, 0, 0.0f, 0.0f, // bottom left
-    1.0f, -1.0f, 0, 1.0f, 0.0f,  // bottom right
-    1.0f, -0.3f, 0, 1.0f, 1.0f,  // top right
+   
+    -1.0f, -1.0f, 0, 0.0f, 0.0f, 
+    1.0f, -1.0f, 0, 1.0f, 0.0f,  
+    1.0f, -0.3f, 0, 1.0f, 1.0f,  
 
-    -1.0f, -1.0f, 0, 0.0f, 0.0f, // bottom left
-    1.0f, -0.3f, 0, 1.0f, 1.0f,  // top right
-    -1.0f, -0.3f, 0, 0.0f, 1.0f  // top left
+    -1.0f, -1.0f, 0, 0.0f, 0.0f, 
+    1.0f, -0.3f, 0, 1.0f, 1.0f,  
+    -1.0f, -0.3f, 0, 0.0f, 1.0f  
 };
 
-GLuint instanceVBO;
 
-TextureData textures[8];
 void init(void)
 {
 
@@ -93,30 +58,8 @@ void init(void)
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    for (int i = 0; i < numLayer; i++)
-    {
-        char filename[64];
-        sprintf(filename, "../resources/groundsm_wht0%i.tga", i + 1);
+    multiBind(numLayer,width,height);
 
-        LoadTGATexture(filename, &textures[i]);
-
-        if (textures[i].bpp != 24)
-        {
-            printf("ERROR: Unexpected bpp in texture %d: %d\n", i, textures[i].bpp);
-            continue;
-        }
-
-        glTexSubImage3D(
-            GL_TEXTURE_2D_ARRAY,
-            0,
-            0, 0, i,          // x, y, z offsets
-            width, height, 1, // width, height, depth
-            GL_RGB,
-            GL_UNSIGNED_BYTE,
-            textures[i].imageData);
-
-        free(textures[i].imageData);
-    }
 
     glActiveTexture(GL_TEXTURE2);
     glGenTextures(1, &tex2);
@@ -130,9 +73,10 @@ void init(void)
     LoadTGATextureSimple("../resources/cubemap.tga", &SkyTex);
 
     glUniform1i(glGetUniformLocation(program, "sky"), 3);
+
+
     // COCKPIT
 
-    // glUseProgram(overlayprogram);
     glGenVertexArrays(1, &cockpitVAO);
     glGenBuffers(1, &cockpitVBO);
 
@@ -179,6 +123,7 @@ void init(void)
 
     mdlMxloc = glGetUniformLocation(program, "mdlMatrix");
     transMxLoc = glGetUniformLocation(program, "trans");
+    
 }
 
 void display(void)
@@ -212,21 +157,11 @@ void display(void)
     glEnable(GL_CULL_FACE);
     glUniform1i(glGetUniformLocation(program, "texUnit"), 0);
 
-    // terrain
-    for (int x = 0; x <= 3; x++)
-    {
-        for (int z = 0; z <= 3; z++)
-        {
-            float tileX = floor(cameraPosition.x / ttex.width) * ttex.width;
-            float tileZ = floor(cameraPosition.z / ttex.height) * ttex.height;
-            float offsetX = tileX + x * (ttex.width - 1);
-            float offsetZ = tileZ + z * (ttex.height - 1);
-            mat4 model = T(offsetX - x, 0, offsetZ - z);
-            glUniformMatrix4fv(transMxLoc, 1, GL_TRUE, model.m);
-            DrawModel(tm, program, "inPosition", "inNormal", "inTexCoord");
-        }
-    }
+    //terrain
+    multiGen();
 
+
+    // cockpit
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glUseProgram(overlayprogram);
@@ -235,13 +170,15 @@ void display(void)
     mat4 ort = ortho(-1, 1, -1, 1, -1, 1);
     glUniformMatrix4fv(glGetUniformLocation(overlayprogram, "proj"), 1, GL_TRUE, ort.m);
 
-    glActiveTexture(GL_TEXTURE4);
+    
     glBindTexture(GL_TEXTURE_2D, cockpitTex);
     glUniform1i(glGetUniformLocation(overlayprogram, "tex"), 4);
 
     glBindVertexArray(cockpitVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
+
+    //finishing the frame
 
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);
